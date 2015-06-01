@@ -47,6 +47,7 @@ CREATE TABLE CONNECTION_USR(
 	status char(30) NOT NULL,
 	PRIMARY KEY(userId,connectionId));
 
+CREATE SEQUENCE msg START 1;
 
 INSERT INTO USR VALUES ('sultani','sk8erdrag','hi@hi.com','Sultan Khan','1995/10/15');
 
