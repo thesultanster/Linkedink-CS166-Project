@@ -32,23 +32,13 @@ import java.util.ArrayList;
  */
 public class ProfNetwork 
 {
-    
-  // Tells if the user is currently logged on
-  boolean logged; 
-
-  // Desired Username
-  String username;
-  // Desired Password
-  String password;
-  // Full Name;
-  String name;
-  // Email
-  String email;
-  // Dob
-  String dob;
-
-
-    
+  boolean logged;     //If user is logged on
+  String username;    //Desired username
+  String password;    //Desired password
+  String name;        //Full name
+  String email;       //Email
+  String dob;         //Date of birth
+   
   // reference to physical database connection.
   private Connection _connection = null;
 
@@ -299,8 +289,7 @@ public class ProfNetwork
     {
       // use postgres JDBC driver.
       Class.forName ("org.postgresql.Driver").newInstance ();
-      // instantiate the EmbeddedSQL object and creates a physical
-      // connection.
+      // instantiate the EmbeddedSQL object and creates a physical connection.
       String dbname = args[0];
       String dbport = args[1];
       String user = args[2];
@@ -315,13 +304,11 @@ public class ProfNetwork
       {
         clrScreen();
    
-
-        // These are sample SQL statements
         System.out.println("Welcome to LinkedInk!");
         System.out.println("---------------------");
         System.out.println("0. Change My Password");
         System.out.println("1. Search People");
-        System.out.println("2. Find the total number of parts supplied by each supplier who supplies at least 3 parts");
+        System.out.println("2. Read Your Messages" );
         System.out.println("3. For every supplier that supplies only green parts, print the name of the supplier and the total number of parts that he supplies");
         System.out.println("4. For every supplier that supplies green part and red part, print the name and the price of the most expensive part that he supplies"); 
         System.out.println("5. Send Message to Anyone");
@@ -605,7 +592,8 @@ public class ProfNetwork
 	  try 
     {
 	    esql.executeUpdate(sql);
-    }catch(Exception e)
+    }
+    catch(Exception e)
     {
 	    System.err.println(e.getMessage());
 	  }
@@ -681,9 +669,7 @@ public class ProfNetwork
       System.err.println(e.getMessage());
     }
 
-
     System.out.println("TEST keyVal: "+keyVal);
-
 	
     String sql = "INSERT INTO MESSAGE VALUES ('"+keyVal+"','"+ username +"','"+receiverId+"','"+contents+"','"+sendTime+"','"+deleteStatus+"','"+status+"');";
 	

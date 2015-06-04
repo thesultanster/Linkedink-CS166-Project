@@ -49,7 +49,7 @@ CREATE TABLE CONNECTION_USR(
 
 CREATE SEQUENCE msg START 1;
 
-INSERT INTO USR VALUES ('sultani','sk8erdrag','hi@hi.com','Sultan Khan','1995/10/15');
+INSERT INTO USR VALUES ('sultani','multani','hi@hi.com','Sultan Khan','1995/10/15');
 
 
 SELECT USR.name
