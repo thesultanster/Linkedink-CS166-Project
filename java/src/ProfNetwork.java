@@ -24,6 +24,8 @@ import java.io.InputStreamReader;
 import java.util.Scanner;
 import java.util.List;
 import java.util.ArrayList;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 /**
  * This class defines a simple embedded SQL utility class that is designed to
@@ -46,6 +48,9 @@ public class ProfNetwork
   // This variable can be global for convenience.
   static BufferedReader in = new BufferedReader(
                               new InputStreamReader(System.in));
+
+  //=====================================================================================================
+  //==============BEGIN HELPER FUNCTIONS (SQL)================================================================
 
   /**
   * Creates a new instance of EmbeddedSQL
@@ -143,8 +148,6 @@ public class ProfNetwork
     return rowCount;
   }//end executeQuery
 
-
-
   /**
    * Method to execute an input query SQL instruction (i.e. SELECT).  This
    * method issues the query to the DBMS and returns the results as
@@ -183,8 +186,6 @@ public class ProfNetwork
     stmt.close ();
     return result;
   }//end executeQueryAndReturnResult
-
-    
 
   /**
   * Method to execute an input query SQL instruction to get userinfo and store
@@ -228,8 +229,6 @@ public class ProfNetwork
     
   }//end UpdateUserInfo
 
-
-
   /**
    * Method to fetch the last value from sequence. This
    * method issues the query to the DBMS and returns the current
@@ -249,8 +248,6 @@ public class ProfNetwork
     return -1;
   }
 
-
-
   /**
   * Method to close the physical connection if it is open.
   */
@@ -266,6 +263,122 @@ public class ProfNetwork
       // ignored.
     }//end try
   }//end cleanup
+
+  public boolean isUser(String username)
+  {
+    int rowCount = 0;
+    try 
+    { // See if username exists
+      String query =
+        "SELECT  USR.userId "
+        +"FROM USR  "
+        +"WHERE USR.userId = '"+username+"';";
+      
+      rowCount = executeQuery(query); 
+      //System.out.println("total row(s): " + rowCount); 
+    }
+    catch(Exception e)
+    {
+      //System.err.println(e.getMessage()); 
+    }
+    return rowCount > 0;
+  }
+
+  //==============END: HELPER FUNCTIONS (SQL)============================================================
+  //===================================================================================================== 
+  //==============BEGIN: HELPER FUNCTIONS (user input)===================================================
+
+  /*
+  * Return int from user input
+  **/
+  public static int getUserInputInt(String prompt) 
+  {
+    int input;
+    // returns only if a correct value is given.
+    do 
+    {
+      System.out.print(prompt);
+      try 
+      { 
+        // read the integer, parse it, and break.
+        input = Integer.parseInt(in.readLine());
+        break;
+      }//end try
+      catch (Exception e) 
+      {
+        System.out.println("!! ERROR: Invalid input !!");
+      }//end catch
+    }while (true);
+    return input;
+  }//end getUserInputInt() -> int
+
+  /*
+  * Return string from user input
+  */
+  public static String getUserInputString(String prompt) 
+  {
+    String input;
+    // returns only if a correct value is given.
+    while(true) 
+    {
+      System.out.print(prompt);
+      try
+      {
+        // read the string, check length, and break.
+        input = in.readLine();
+        break;
+      }//end try
+      catch(Exception e)
+      {
+        System.out.println("!! ERROR: Invalid input !!");
+      }//end catch
+    } //end while
+    return input;
+  } //end getUserInputString() -> string
+
+  /*
+  * Return string from user input
+  */
+  public static String getUserInputString(String prompt, int maxLength) 
+  {
+    String input;
+    // returns only if a correct value is given.
+    while(true) 
+    {
+      System.out.print(prompt);
+      try
+      {
+        // read the string, check length, and break.
+        input = in.readLine();
+        if (maxLength < 0 || input.length() <= maxLength)
+        {
+          break;
+        }
+        System.out.println("!! ERROR: Invalid input. Length must be >= "+maxLength+" !!");
+      }//end try
+      catch(Exception e)
+      {
+        System.out.println("!! Invalid input !!");
+      }//end catch
+    } //end while
+    return input;
+  } //end getUserInputString() -> string
+
+  //==============END: HELPER FUNCTIONS (user input)=====================================================
+  //=====================================================================================================
+  //==============BEGIN: HELPER FUNCTIONS (other)========================================================
+
+public static void clrScreen()
+  {
+    final String ANSI_CLS = "\u001b[2J";
+    final String ANSI_HOME = "\u001b[H";
+    System.out.print(ANSI_CLS + ANSI_HOME);
+    System.out.flush();
+  }
+  
+  //==============END: HELPER FUNCTIONS (other)==========================================================
+  //=====================================================================================================
+  //==============BEGIN MAIN==============================================================================
 
   /**
   * The main execution method
@@ -295,9 +408,7 @@ public class ProfNetwork
       String user = args[2];
       esql = new ProfNetwork (dbname, dbport, user, "");
 
-      String userKey = LoginPrompt(esql);
-
-      //System.out.println("UserKey is : " + userKey );
+      LoginPrompt(esql);
 
       boolean keepon = true;
       while(keepon) 
@@ -305,33 +416,31 @@ public class ProfNetwork
         clrScreen();
    
         System.out.println("Welcome to LinkedInk!");
-        System.out.println("---------------------");
+        System.out.println("-------------------------");
         System.out.println("0. Change My Password");
         System.out.println("1. Search People");
-        System.out.println("2. Read Your Messages" );
-        System.out.println("3. For every supplier that supplies only green parts, print the name of the supplier and the total number of parts that he supplies");
-        System.out.println("4. For every supplier that supplies green part and red part, print the name and the price of the most expensive part that he supplies"); 
-        System.out.println("5. Send Message to Anyone");
-        System.out.println("6. Find the address of the suppliers who supply _____________ (pname)");
+        System.out.println("2. View Friend Requests (TODO)");
+        System.out.println("3. View Friends List (TODO)");
+        System.out.println("4. Send Message to Anyone");
+        System.out.println("5. Read Your Messages (IN PROGRESS)" );
         System.out.println("9. < EXIT");
 
-        switch (readChoice()){
+        switch (getUserInputInt("Select option: ")){
           case 0: ChangePassword(esql); break;
           case 1: SearchName(esql); break;
-          case 2: Query2(esql); break;
-          case 3: Query3(esql); break;
-          case 4: Query4(esql); break;
-          case 5: SendMessage(esql); break;
-          case 6: Query6(esql); break;
+          case 2: ViewFriendRequests(esql); break;
+          case 3: ViewFriendsList(esql); break;
+          case 4: SendMessage(esql); break;
+          case 5: ReadMessages(esql); break;
           case 9: keepon = false; break;
           default : System.out.println("Unrecognized choice!"); break;
         }//end switch
       }//end while
-    }
+    }//end try
     catch(Exception e) 
     {
       System.err.println (e.getMessage ());
-    }
+    }//end catch
     finally
     {
       // make sure to cleanup the created table and close the connection.
@@ -343,40 +452,29 @@ public class ProfNetwork
           esql.cleanup ();
           System.out.println("Done\n\nBye !");
         }//end if
-      }
+      }//end try
       catch (Exception e) 
       {
         // ignored.
       }//end catch
-    }//end try
+    }//end finally
   }//end main
 
+  //=============END: MAIN===============================================================================
+  //=====================================================================================================
+  //=============BEGIN: LOGIN AND SIGN UP================================================================
 
-  public static void clrScreen()
-  {
-    final String ANSI_CLS = "\u001b[2J";
-    final String ANSI_HOME = "\u001b[H";
-    System.out.print(ANSI_CLS + ANSI_HOME);
-    System.out.flush();
-  }
-    
-  //=======MENUS============================================================================================
-    
-
-
-  public static void Greeting()
-  {
-    System.out.println(
-      "\n\n*******************************************************\n" +
-      "              User Interface      	               \n" +
-      "*******************************************************\n");
-  }//end Greeting
-
-
-  public static String Login(ProfNetwork esql)
+  /*
+  * Prompt the user to login with username and password
+  */
+  public static void Login(ProfNetwork esql)
   {
 	  clrScreen();
 	
+	  System.out.println(
+      "\n\n*******************************************************\n" +
+      "                     Login      	               \n" +
+      "*******************************************************\n");
 	  // Bool becomes true if wrong login info
 	  boolean again = false;
 
@@ -386,35 +484,32 @@ public class ProfNetwork
     int rowCount = 0;
 
     // Login credentials
-    do
+    while (true)
     {
-      if(again)
-        System.out.println("ERROR: Invalid Credentials");
-
-      System.out.print("Username: ");
-      input = new Scanner(System.in);
-      username  = input.next();
-
-      System.out.print("Password: ");
-      input = new Scanner(System.in);
-      password  = input.next();
-
+      username = getUserInputString("Username: ");
+      password = getUserInputString("Password: ");
+      
       try 
-      { // See if username exists
+      { 
+        // See if username and password combo exist
         String query =
           "SELECT  USR.userId "
           +"FROM USR  "
           +"WHERE USR.userId = '"+username+"' AND USR.password = '"+password+"';";
         
         rowCount = esql.executeQuery(query); 
+        if (rowCount > 0)
+        {
+          break;
+        }
         //System.out.println("total row(s): " + rowCount); 
       }
       catch(Exception e)
       {
         System.err.println(e.getMessage()); 
       }
-      again = true;
-    } while(rowCount == 0); // If username exists then rowCount == 1, otherwise retry
+      System.out.println("ERROR: Invalid Credentials");
+    }
 
     try
     {
@@ -426,147 +521,95 @@ public class ProfNetwork
     }
 
     System.out.println("ESQL Testing: "+ esql.username + " " + esql.password + " " + esql.email + " " + esql.name + " " + esql.dob);
-    // set values to PorfNework object
-    //esql.username = username;
-    //esql.password = password;
+  }//end Login()
 
-    
-    return username; 
-  }
-
-  public static String SignUp(ProfNetwork esql)
+  /*
+  * Prompt user for new account information to sign up
+  */
+  public static void SignUp(ProfNetwork esql)
   {
     clrScreen();
 	
 	  System.out.println(
       "\n\n*******************************************************\n" +
-      "              Please Sign Up      	               \n" +
+      "                     Sign Up      	               \n" +
       "*******************************************************\n");
 
     Scanner input;
      
     // Bool becomes true if wrong username
     boolean again = false;
-    // Desired Username 
-    String username;
-    // Desired Password
-    String password;
-    // Full Name; 
-    String name;
-    // Email
-    String email;
-    // Dob
-    String dob;
+    String username;            //Desired Username
+    String password;            //Desired password
+    String email;               //Email
+    String name;                //Full name
+    String dob;                 //Date of birth
 
-	 
-    // Input Username
-    do 
+    while (true)
     {
-      if(again)
-        System.out.println("ERROR: Username must be less than 10 characters");
-      
-      System.out.print("Desired Username: ");
-      input = new Scanner(System.in);
-      username  = input.next();
+      // Input Available Username 
+      while (true)
+      {
+        username = getUserInputString("Desired Username: ", 10);
+        if (!esql.isUser(username))
+        {
+          break;
+        }
+        System.out.println("!! ERROR: Username taken !!");
+      }//end while for username
+      password = getUserInputString("Desired Password: ", 10);        //Input password 
+      email = getUserInputString("Your Email Address: ");             //Input email 
+      name = getUserInputString("Your Full Name: ", 50);              //Input name
+      dob = getUserInputString("Your Date of Birth (YYYY/MM/DD) : "); //Input date of birth
 
-      again = true; 
-    } while (username.length() > 10);
-
-	  // Now use bool for password
-	  again = false;
-
-	  // Input Password
-	  do 
-    {
-	    if(again)
-		    System.out.println("ERROR: Password must be less than 10 characters");
-	  
-	    System.out.print("Desired Password: ");
-	    input = new Scanner(System.in);
-	    password  = input.next();
-
-	    again = true; 
-	  } while (password.length() > 10);
-
-    // Input Email
-	  System.out.print("Your Email Address: ");
-	  input = new Scanner(System.in);
-	  email  = input.next();
-
-	  // use bool for name
-	  again = false; 
-
-	  // Input Full Name
-	  do 
-    {
-	    if(again)
-		    System.out.println("ERROR: Name must be less than 50 characters");
-	  
-	    System.out.print("Your Name: ");
-	    input = new Scanner(System.in);
-	    name  = input.next();
-
-	    again = true; 
-	  } while (name.length() > 50);
-
-	  // Input DoB
-	  System.out.print("Your Date of Birth (YYYY/MM/DD) : ");
-	  input = new Scanner(System.in);
-	  dob  = input.next();
-
-	  String sql = "INSERT INTO USR VALUES ('" + username + "','" + password + "','" + email + "','" + name + "','" + dob + "');";
-	  try 
-    {
-	    esql.executeUpdate(sql);
-      System.out.println("User craeated: "+ username + " " + password + " " + email + " " + name + " " + dob);
-	  }
-    catch(Exception e)
-    {
-	    System.err.println(e.getMessage());
-	  }
-	 
-	  esql.username = username;
-	  esql.password = password;
-	  esql.email = email;
-	  esql.name = name;
-	  esql.dob = dob; 
-
-	  return username; 
-	}
+      String sql = "INSERT INTO USR VALUES ('" + username + "','" + password + "','" + email + "','" + name + "','" + dob + "');";
+      try 
+      {
+        esql.executeUpdate(sql);
+        System.out.println("User craeated: "+ username + " " + password + " " + email + " " + name + " " + dob);
+        esql.UpdateUserInfo(username);
+        System.out.println("User logged in: "+username);
+        break;
+      }//end try
+      catch(Exception e)
+      {
+        System.err.println(e.getMessage());
+      }//end catch
+    }//end while
+  }//end SignUp()
     
-  public static String LoginPrompt(ProfNetwork esql)
+  public static void LoginPrompt(ProfNetwork esql)
   {
     clrScreen();
 
     System.out.println(
       "\n\n*******************************************************\n" +
-      "              Login Screen      	               \n" +
+      "                        Welcome      	               \n" +
       "*******************************************************\n");
     System.out.println("0. Sign Up!");
     System.out.println("1. Sign In");
 
-	  String userKey="";
-	 
-	  switch (readChoice())
+	  switch (getUserInputInt("Select option: "))
     {
 	    case 0:
-	      userKey = SignUp(esql);
+	      SignUp(esql);
 	      break;
 	    case 1:
-	      userKey = Login(esql);
+	      Login(esql);
 	      break;
 	    default : 
-        System.out.println("Unrecognized choice!"); 
+        System.out.println("!! Invalid option !!"); 
         break;
 	  }//end switch 
+  } //end LoginPrompt()
 
-	  return userKey; 
-  }
-    
-  //========================================================================================================
+  //=============END: LOGIN AND SIGN UP==================================================================
+  //=====================================================================================================
+  //=============START: CHANGE PASSWORD==================================================================
 
-  //========== Queries ====================================================================================
-
+  /*
+  * Update user's password 
+  */
   public static void ChangePassword(ProfNetwork esql)
   {
 	  clrScreen();
@@ -576,18 +619,12 @@ public class ProfNetwork
     boolean again = false;
 
 	  // Input Password
-	  do 
+    password = getUserInputString("Desired Password (Enter to Exit): ", 10);
+    if (password.isEmpty())
     {
-	    if(again)
-		    System.out.println("ERROR: Password must be less than 10 characters");
-	  
-	    System.out.print("Desired Password: ");
-	    input = new Scanner(System.in);
-	    password  = input.next();
+      return; 
+    }
 
-	    again = true; 
-	  } while (password.length() > 10);
-	
 	  String sql = "UPDATE USR SET password = '"+password+"' WHERE USR.userId = '"+esql.username+"';";
 	  try 
     {
@@ -600,6 +637,9 @@ public class ProfNetwork
     esql.password = password; 
   }
 
+  /*
+  * Search for any user by username
+  */
   public static void SearchName(ProfNetwork esql)
   {
     clrScreen();
@@ -623,107 +663,209 @@ public class ProfNetwork
       System.err.println(e.getMessage());
     }
 
-    System.out.print("Send Request to a user (username SEARCH / 0 EXIT) : ");
-
-    input = new Scanner(System.in);
-    String temp  = input.next();
-    if(temp.equals("0"))
+    while (true)
     {
-        return; 
+      String temp = getUserInputString("Send Request to a user (Enter to Exit)");
+      if (temp.equals(""))
+      {
+        break;
+      }
     }
   }
 
+  //=============END: CHANGE PASSWORD====================================================================
+  //=====================================================================================================
+  //=============BEGIN: FRIENDS==========================================================================
+  
+  public static void ViewFriendRequests(ProfNetwork esql)
+  {
+    getUserInputString("TODO: View Friend Requests"); 
+  }
+
+  public static void ViewFriendsList(ProfNetwork esql)
+  {
+    getUserInputString("TODO: View Friends List"); 
+  
+  }
+  
+  //=============END: FRIENDS============================================================================
+  //=====================================================================================================
+  //=============BEGIN: MESSAGES=========================================================================
+
+  /*
+  * Send message to any user
+  */
   public static void SendMessage(ProfNetwork esql)
   {
     clrScreen();
 
     Scanner input;
-    int deleteStatus;
-    String username = esql.username; 
-    String receiverId;
-    String contents;
-    String status;
-    String sendTime = "2004-10-19 10:23:54"; 
+    String senderid = esql.username;        //Username of sender
+    String receiverid;                      //Username of receiver (to be entered)
+    String contents;                        //Contents of message (to be entered)
+    String status = "UNREAD";               //Status of read or unread 
+    int deleteStatus = 0;                   //Status of deletion 
+    String sendTime = new SimpleDateFormat("MM-dd-yyyy HH:mm:ss").format(new Date()); //Get current date and time in SQL format
 
-    System.out.print("Send To (username): ");
-    input = new Scanner(System.in);
-    receiverId  = input.next();
-
-	  //TODO error check if receiverid exists
-
-	
-    System.out.print("Message : ");
-    input = new Scanner(System.in);
-    contents  = input.next();
-
-    status="UNREAD";
-    deleteStatus = 0;
-	
-    int keyVal = 0;
-    try 
+    while (true)
     {
-      keyVal = esql.getCurrSeqVal("msg");
-    }
+      //Get valid username to send to
+      while (true)
+      {
+        receiverid = getUserInputString("Send To (username or enter to exit): ");
+        if (receiverid.equals(""))
+        {
+          return; 
+        }
+        if (esql.isUser(receiverid))
+        {
+          break;
+        }
+        System.out.println("!! ERROR: Username does not exist !!");
+      }
+      contents = getUserInputString("Message: ");
+
+      int keyVal = 0;
+      try 
+      {
+        keyVal = esql.getCurrSeqVal("msg");
+      }
+      catch(Exception e)
+      {
+        System.err.println(e.getMessage());
+      }
+
+      System.out.println("TEST keyVal: "+keyVal);
+    
+      String sql = "INSERT INTO MESSAGE VALUES ('"+keyVal+"','"+ senderid +"','"+receiverid+"','"+contents+"','"+sendTime+"','"+deleteStatus+"','"+status+"');";
+
+      try 
+      {
+        esql.executeUpdate(sql);
+      }
+      catch(Exception e)
+      {
+        System.err.println(e.getMessage());
+      }
+      System.out.println("Message sent to "+receiverid);
+      System.out.println("* * * * NEXT MESSAGE * * * *");
+	  }
+  }
+
+  /*
+  * View all messages and delete messages
+  */
+  public static void ReadMessages(ProfNetwork esql)
+  {
+    String sql; 
+    List<List<String>> messages;
+    List<String> message;
+    int toDelete = 0, newDeleteStatus = 0; 
+    String msgid, senderid, receiverid, deleteStatus; 
+
+    try
+    {
+      //get all messages to/from user
+      sql = "SELECT * "
+            +"FROM MESSAGE M "
+            +"WHERE (M.senderId='"+esql.username+"' AND (M.deleteStatus=0 OR M.deleteStatus=2)) "
+               +"OR (M.receiverId='"+esql.username+"' AND (M.deleteStatus=0 OR M.deleteStatus=1))"; 
+      messages = esql.executeQueryAndReturnResult(sql);
+      //update unread messages to read
+      sql = "UPDATE MESSAGE SET status='READ' WHERE MESSAGE.receiverId='"+esql.username+"' AND STATUS='UNREAD'";
+	    esql.executeUpdate(sql);
+    }//end try
     catch(Exception e)
     {
       System.err.println(e.getMessage());
+      return; 
+    }//end catch
+
+    System.out.println("* * * * Messages * * * *");
+    
+    //if there are no messages
+    if (messages.isEmpty())
+    {
+      getUserInputString("No Messages");
+      return; 
+    }
+    
+    //output messages
+    for (int i = 0; i < messages.size(); ++i)
+    {
+
+      List<String> sublist = messages.get(i);
+      if (sublist.isEmpty())
+      {
+        continue;
+      }
+      //output index, timestamp, senderid, receiverid, read status, content
+      System.out.format("%-2d%-25s%-13s%-13s%-13s%-15s", i, sublist.get(4).trim(), sublist.get(1).trim(), sublist.get(2).trim(), sublist.get(6).trim(), sublist.get(3).trim()); 
+      System.out.println(); 
+    }
+    
+    //prompt for messages to delete
+    while(true)
+    {
+      toDelete = getUserInputInt("Message to delete (Negative number to continue): ");
+      if (toDelete < messages.size())
+      {
+        if (toDelete < 0)
+        {
+          return;
+        }
+        break; 
+      }
+      System.out.println("!! ERROR: Invalid Selection !!"); 
+    }
+    System.out.println("Selected "+toDelete);
+
+    message = messages.get(toDelete);
+    msgid = message.get(0).trim();
+    senderid = message.get(1).trim(); 
+    receiverid = message.get(2).trim(); 
+    deleteStatus = message.get(5).trim();
+    if (senderid.equals(esql.username))
+    {
+      newDeleteStatus = deleteStatus.equals("0") ? 1 
+                        : deleteStatus.equals("2") ? 3 
+                        : -1;
+    }
+    else if (receiverid.equals(esql.username))
+    {
+      newDeleteStatus = deleteStatus.equals("0") ? 2 
+                        : deleteStatus.equals("1") ? 3 
+                        : -1;
+    }
+    
+    System.out.println(newDeleteStatus);
+	  
+    if (newDeleteStatus == -1)
+    {
+      return; 
     }
 
-    System.out.println("TEST keyVal: "+keyVal);
-	
-    String sql = "INSERT INTO MESSAGE VALUES ('"+keyVal+"','"+ username +"','"+receiverId+"','"+contents+"','"+sendTime+"','"+deleteStatus+"','"+status+"');";
-	
 	  try 
     {
+      sql = "UPDATE MESSAGE SET deleteStatus="+newDeleteStatus+" WHERE MESSAGE.msgId="+msgid;
 	    esql.executeUpdate(sql);
-	  }
+    }
     catch(Exception e)
     {
 	    System.err.println(e.getMessage());
 	  }
-
-	  System.out.print("Sent messagea user (0 SEND ANOTHER / any key EXIT) : ");
-
-	  input = new Scanner(System.in);
-	  String temp  = input.next();
-	  if (temp.equals("0"))
-    {
-	    SendMessage(esql);
-	  }
-	  else 
-    {
-	    System.out.println("Wrong Value");
-	    return;
-	  }
-	 
   }
-  //========================================================================================================
 
-  /*
-  * Reads the users choice given from the keyboard
-  * @int
-  **/
-  public static int readChoice() 
-  {
-    int input;
-    // returns only if a correct value is given.
-    do 
-    {
-      System.out.print("Please make your choice: ");
-      try 
-      { // read the integer, parse it and break.
-        input = Integer.parseInt(in.readLine());
-        break;
-      }
-      catch (Exception e) 
-      {
-        System.out.println("Your input is invalid!");
-        continue;
-      }//end try
-    }while (true);
-    return input;
-  }//end readChoice
+  //=============END: MESSAGES===========================================================================
 
+
+
+
+
+
+  //=====================================================================================================
+  //=====================================================================================================
+  
   public static void QueryExample(ProfNetwork esql)
   {
     try
@@ -859,5 +1001,5 @@ public class ProfNetwork
     }
   }//end Query6
 
-}//end EmbeddedSQL
+}//end ProfNetwork
 
