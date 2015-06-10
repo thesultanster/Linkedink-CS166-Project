@@ -21,7 +21,6 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
-import java.util.Scanner;
 import java.util.List;
 import java.util.ArrayList;
 import java.text.SimpleDateFormat;
@@ -264,6 +263,9 @@ public class ProfNetwork
     }//end try
   }//end cleanup
 
+  /*
+  * Return if username exists
+  */
   public boolean isUser(String username)
   {
     int rowCount = 0;
@@ -293,25 +295,64 @@ public class ProfNetwork
   **/
   public static int getUserInputInt(String prompt) 
   {
+    String s;
     int input;
     // returns only if a correct value is given.
-    do 
+    while (true) 
     {
       System.out.print(prompt);
       try 
       { 
         // read the integer, parse it, and break.
-        input = Integer.parseInt(in.readLine());
+        s = in.readLine();
+        if (s.equals(""))   //stop if input is empty
+        {
+          return -1;
+        }
+        input = Integer.parseInt(s);
         break;
       }//end try
       catch (Exception e) 
       {
-        System.out.println("!! ERROR: Invalid input !!");
       }//end catch
-    }while (true);
+      System.out.println("!! ERROR: Invalid input !!");
+    }
     return input;
   }//end getUserInputInt() -> int
 
+  /*
+  * Return int from user input
+  **/
+  public static int getUserInputInt(String prompt, int maxValue) 
+  {
+    String s;
+    int input;
+    // returns only if a correct value is given.
+    while (true)
+    {
+      System.out.print(prompt);
+      try 
+      { 
+        // read the integer, parse it, and break.
+        s = in.readLine();
+        if (s.equals(""))   //stop if input is empty
+        {
+          return -1;
+        }
+        input = Integer.parseInt(s);
+        if (input >= 0 && input <= maxValue)
+        {
+          break;
+        }
+      }//end try
+      catch (Exception e) 
+      {
+      }//end catch
+      System.out.println("!! ERROR: Invalid input !!");
+    }
+    return input;
+  }//end getUserInputInt() -> int
+  
   /*
   * Return string from user input
   */
@@ -330,8 +371,8 @@ public class ProfNetwork
       }//end try
       catch(Exception e)
       {
-        System.out.println("!! ERROR: Invalid input !!");
       }//end catch
+      System.out.println("!! ERROR: Invalid input !!");
     } //end while
     return input;
   } //end getUserInputString() -> string
@@ -358,7 +399,7 @@ public class ProfNetwork
       }//end try
       catch(Exception e)
       {
-        System.out.println("!! Invalid input !!");
+        System.out.println("!! ERROR: Invalid input !!");
       }//end catch
     } //end while
     return input;
@@ -368,7 +409,7 @@ public class ProfNetwork
   //=====================================================================================================
   //==============BEGIN: HELPER FUNCTIONS (other)========================================================
 
-public static void clrScreen()
+  public static void clrScreen()
   {
     final String ANSI_CLS = "\u001b[2J";
     final String ANSI_HOME = "\u001b[H";
@@ -418,22 +459,27 @@ public static void clrScreen()
         System.out.println("Welcome to LinkedInk!");
         System.out.println("-------------------------");
         System.out.println("0. Change My Password");
-        System.out.println("1. Search People");
-        System.out.println("2. View Friend Requests (TODO)");
-        System.out.println("3. View Friends List (TODO)");
-        System.out.println("4. Send Message to Anyone");
-        System.out.println("5. Read Your Messages (IN PROGRESS)" );
+        System.out.println("1. Edit Profile (TODO)");
+        System.out.println("2. Search People");
+        System.out.println("3. Send Friend Requests (IN PROGRESS)");
+        System.out.println("4. View Friend Requests");
+        System.out.println("5. View Friends List (IN PROGRESS)");
+        System.out.println("6. Send Messages to Anyone");
+        System.out.println("7. Read Messages" );
         System.out.println("9. < EXIT");
 
-        switch (getUserInputInt("Select option: ")){
+        switch (getUserInputInt("Select option: "))
+        {
           case 0: ChangePassword(esql); break;
-          case 1: SearchName(esql); break;
-          case 2: ViewFriendRequests(esql); break;
-          case 3: ViewFriendsList(esql); break;
-          case 4: SendMessage(esql); break;
-          case 5: ReadMessages(esql); break;
+          case 1: EditProfile(esql); break;
+          case 2: SearchName(esql); break;
+          case 3: SendFriendRequests(esql); break;
+          case 4: ViewFriendRequests(esql); break;
+          case 5: ViewFriendsList(esql); break;
+          case 6: SendMessages(esql); break;
+          case 7: ReadMessages(esql); break;
           case 9: keepon = false; break;
-          default : System.out.println("Unrecognized choice!"); break;
+          default : System.out.println("!! ERROR: Invalid Selection !!"); break;
         }//end switch
       }//end while
     }//end try
@@ -475,10 +521,7 @@ public static void clrScreen()
       "\n\n*******************************************************\n" +
       "                     Login      	               \n" +
       "*******************************************************\n");
-	  // Bool becomes true if wrong login info
-	  boolean again = false;
 
-    Scanner input; 
     String username;
     String password; 
     int rowCount = 0;
@@ -535,10 +578,6 @@ public static void clrScreen()
       "                     Sign Up      	               \n" +
       "*******************************************************\n");
 
-    Scanner input;
-     
-    // Bool becomes true if wrong username
-    boolean again = false;
     String username;            //Desired Username
     String password;            //Desired password
     String email;               //Email
@@ -589,7 +628,7 @@ public static void clrScreen()
     System.out.println("0. Sign Up!");
     System.out.println("1. Sign In");
 
-	  switch (getUserInputInt("Select option: "))
+	  switch (getUserInputInt("Select option: ", 1))
     {
 	    case 0:
 	      SignUp(esql);
@@ -614,12 +653,10 @@ public static void clrScreen()
   {
 	  clrScreen();
 	
-    Scanner input; 
     String password;
-    boolean again = false;
 
 	  // Input Password
-    password = getUserInputString("Desired Password (Enter to Exit): ", 10);
+    password = getUserInputString("Desired Password (Enter to Cancel): ", 10);
     if (password.isEmpty())
     {
       return; 
@@ -637,6 +674,11 @@ public static void clrScreen()
     esql.password = password; 
   }
 
+  public static void EditProfile(ProfNetwork esql)
+  {
+    getUserInputString("TODO: Edit Profile");
+  }
+
   /*
   * Search for any user by username
   */
@@ -644,18 +686,11 @@ public static void clrScreen()
   {
     clrScreen();
 
-    Scanner input;
-    String name;
-    boolean again = false;
-
-    System.out.print("Enter Name: ");
-    input = new Scanner(System.in);
-    name  = input.next();
-
-    String sql = "SELECT userId AS Username, name AS Name FROM USR WHERE name = '" + name + "';";
+    String name = getUserInputString("Search For (Name): ");
 
     try 
     {
+      String sql = "SELECT userId AS Username, name AS Name FROM USR WHERE name = '" + name + "';";
       esql.executeQuery(sql);
     }
     catch(Exception e)
@@ -663,30 +698,170 @@ public static void clrScreen()
       System.err.println(e.getMessage());
     }
 
-    while (true)
-    {
-      String temp = getUserInputString("Send Request to a user (Enter to Exit)");
-      if (temp.equals(""))
-      {
-        break;
-      }
-    }
+    getUserInputString("Enter to Continue.");
   }
 
   //=============END: CHANGE PASSWORD====================================================================
   //=====================================================================================================
   //=============BEGIN: FRIENDS==========================================================================
-  
+
+  /*
+  * Send friend requests to people within network
+  */
+  public static void SendFriendRequests(ProfNetwork esql)
+  {
+    String connectionid, sql;
+
+    System.out.println("* * * * Friend Requests * * * *");
+    //get username to send request
+    while (true)
+    {
+      connectionid = getUserInputString("Send Request to (Enter to Cancel): "); 
+      if (connectionid.equals(""))
+      {
+        return;
+      }
+      if (esql.isUser(connectionid))
+      {
+        break; 
+      }
+      System.out.println("!! ERROR: User does not exist !!");
+    }
+    
+    try
+    {
+      sql = "INSERT INTO CONNECTION_USR VALUES ('" + esql.username + "','" + connectionid + "','REQUEST');";
+      esql.executeUpdate(sql);
+    }//end try
+    catch(Exception e)
+    {
+      System.err.println(e.getMessage());
+    }//end catch
+
+    getUserInputString("Successfully Sent Request to " + connectionid + ". Enter to Continue."); 
+  }//end SendFriendRequests()
+
+  /*
+  * View and respond to friend requests
+  */
   public static void ViewFriendRequests(ProfNetwork esql)
   {
-    getUserInputString("TODO: View Friend Requests"); 
-  }
+    String sql, status; 
+    List<List<String>> connectionRequests;
+    int respondTo;
 
+    try
+    {
+      sql = "SELECT C.userId FROM CONNECTION_USR C WHERE C.status='REQUEST' AND C.connectionid='" + esql.username + "';";
+      connectionRequests = esql.executeQueryAndReturnResult(sql); 
+    }
+    catch(Exception e)
+    {
+      System.err.println(e.getMessage());
+      return;
+    }
+
+    //if no requests 
+    if (connectionRequests.isEmpty())
+    {
+      getUserInputString("No Friend Requests. Enter to Continue.");
+      return; 
+    }
+    
+    //list usernames of requests 
+    for (int i = 0; i < connectionRequests.size(); ++i)
+    {
+      System.out.format("%-3d%s", i, connectionRequests.get(i).get(0));
+      System.out.println();
+    }
+
+    //allow user to respond to friend requests
+    while (true)
+    {
+      respondTo = getUserInputInt("Respond to (Enter to Cancel): ", connectionRequests.size()-1); 
+      if (respondTo < 0)
+      {
+        return;
+      }
+      
+      System.out.println("* * * * SELECT RESPONSE * * * *");
+      System.out.println("0. Accept Request");
+      System.out.println("1. Decline Request");
+      switch(getUserInputInt("Select Option: ", 1))
+      {
+        case 0:   //accept
+          System.out.println("Accept");
+          status = "ACCEPT";
+          break;
+        case 1:   //decline
+          System.out.println("Decline");
+          status = "DECLINE";
+          break; 
+        default:
+          return;
+      }
+      //update connection status
+      try 
+      {
+        sql = "UPDATE CONNECTION_USR SET status='"+status+"' WHERE CONNECTION_USR.userId='"+connectionRequests.get(respondTo).get(0)+"' AND CONNECTION_USR.connectionId='"+esql.username+"'";
+        esql.executeUpdate(sql);
+      }
+      catch(Exception e)
+      {
+        System.err.println(e.getMessage());
+      }
+    }
+
+    
+  }//end ViewFriendRequests
+
+  /*
+  * View friends list
+  */
   public static void ViewFriendsList(ProfNetwork esql)
   {
-    getUserInputString("TODO: View Friends List"); 
-  
-  }
+    String sql; 
+    List<List<String>> friendsList;
+    int viewProfileOf;
+
+    try
+    {
+      sql = "SELECT U.userId, U.name "
+           +"FROM   USR U, CONNECTION_USR C "
+           +"WHERE  U.userId != '" + esql.username + "' AND C.status='ACCEPT' "
+                  + "AND ((U.userId = C.userId AND C.connectionId = '" + esql.username + "') "
+                  +"OR (C.userId = '" + esql.username + "' AND C.connectionId = U.userId))";
+      friendsList = esql.executeQueryAndReturnResult(sql); 
+    }
+    catch(Exception e)
+    {
+      System.err.println(e.getMessage());
+      return;
+    }
+
+    //if no friends 
+    if (friendsList.isEmpty())
+    {
+      getUserInputString("No Friends. Enter to Continue.");
+      return; 
+    }
+    
+    //list usernames of requests 
+    for (int i = 0; i < friendsList.size(); ++i)
+    {
+      System.out.format("%-3d%-13s%s", i, friendsList.get(i).get(0), friendsList.get(i).get(1));
+      System.out.println();
+    }
+
+    viewProfileOf = getUserInputInt("View Profile of (Enter to Continue): ", friendsList.size()-1); 
+    if (viewProfileOf < 0)
+    {
+      return;
+    }
+    System.out.println("Profile of... " + friendsList.get(viewProfileOf).get(0) + ": " + friendsList.get(viewProfileOf).get(1));
+    getUserInputString("Enter to Continue.");
+
+  }//end ViewFriendsList
   
   //=============END: FRIENDS============================================================================
   //=====================================================================================================
@@ -695,11 +870,10 @@ public static void clrScreen()
   /*
   * Send message to any user
   */
-  public static void SendMessage(ProfNetwork esql)
+  public static void SendMessages(ProfNetwork esql)
   {
     clrScreen();
 
-    Scanner input;
     String senderid = esql.username;        //Username of sender
     String receiverid;                      //Username of receiver (to be entered)
     String contents;                        //Contents of message (to be entered)
@@ -712,7 +886,7 @@ public static void clrScreen()
       //Get valid username to send to
       while (true)
       {
-        receiverid = getUserInputString("Send To (username or enter to exit): ");
+        receiverid = getUserInputString("Send To (Username or Enter to Cancel): ");
         if (receiverid.equals(""))
         {
           return; 
@@ -805,20 +979,11 @@ public static void clrScreen()
     }
     
     //prompt for messages to delete
-    while(true)
+    toDelete = getUserInputInt("Message to delete (Enter to Cancel): ", messages.size()-1);
+    if (toDelete < 0)
     {
-      toDelete = getUserInputInt("Message to delete (Negative number to continue): ");
-      if (toDelete < messages.size())
-      {
-        if (toDelete < 0)
-        {
-          return;
-        }
-        break; 
-      }
-      System.out.println("!! ERROR: Invalid Selection !!"); 
+      return;
     }
-    System.out.println("Selected "+toDelete);
 
     message = messages.get(toDelete);
     msgid = message.get(0).trim();
