@@ -6,45 +6,45 @@ DROP TABLE USR;
 
 
 CREATE TABLE USR(
-	userId varchar(10) UNIQUE NOT NULL, 
-	password varchar(10) NOT NULL,
+	userId text UNIQUE NOT NULL, 
+	password text NOT NULL,
 	email text NOT NULL,
-	name char(50),
-	dateOfBirth date,
+	name text,
+	dateOfBirth char(11),
 	Primary Key(userId));
 
 CREATE TABLE WORK_EXPR(
-	userId char(10) NOT NULL, 
-	company char(50) NOT NULL, 
-	role char(50) NOT NULL,
-	location char(50),
+	userId text NOT NULL, 
+	company text NOT NULL, 
+	role text NOT NULL,
+	location text,
 	startDate date,
 	endDate date,
 	PRIMARY KEY(userId,company,role,startDate));
 
 CREATE TABLE EDUCATIONAL_DETAILS(
-	userId char(10) NOT NULL, 
-	instituitionName char(50) NOT NULL, 
-	major char(50) NOT NULL,
-	degree char(50) NOT NULL,
+	userId text NOT NULL, 
+	instituitionName text NOT NULL, 
+	major text NOT NULL,
+	degree text NOT NULL,
 	startdate date,
 	enddate date,
 	PRIMARY KEY(userId,major,degree));
 
 CREATE TABLE MESSAGE(
 	msgId integer UNIQUE NOT NULL, 
-	senderId char(10) NOT NULL,
-	receiverId char(10) NOT NULL,
-	contents char(500) NOT NULL,
-	sendTime timestamp,
+	senderId text NOT NULL,
+	receiverId text NOT NULL,
+	contents text NOT NULL,
+	sendTime text,
 	deleteStatus integer,
-	status char(30) NOT NULL,
+	status text NOT NULL,
 	PRIMARY KEY(msgId));
 
 CREATE TABLE CONNECTION_USR(
-	userId char(10) NOT NULL, 
-	connectionId char(10) NOT NULL, 
-	status char(30) NOT NULL,
+	userId text NOT NULL, 
+	connectionId text NOT NULL, 
+	status text NOT NULL,
 	PRIMARY KEY(userId,connectionId));
 
 CREATE SEQUENCE msg START 1;

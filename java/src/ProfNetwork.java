@@ -1,10 +1,8 @@
 /*
- * Template JAVA User Interface
- * =============================
- *
- * Database Management Systems
- * Department of Computer Science &amp; Engineering
- * University of California - Riverside
+ * Partner 1: Amanda Berryhill, 861070154
+ * Partner 2: Sultan Khan, 861047478
+ * Group ID: 49
+ * CS166: Project
  *
  * Target DBMS: 'Postgres'
  *
@@ -23,6 +21,7 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
@@ -126,9 +125,10 @@ public class ProfNetwork
     int rowCount = 0;
 
     // iterates through the result set and output them to standard out.
-    boolean outputHeader = true;
+    //boolean outputHeader = true;
     while (rs.next())
     {
+      /*
       if(outputHeader)
       {
         for(int i = 1; i <= numCol; i++)
@@ -138,9 +138,11 @@ public class ProfNetwork
         System.out.println();
         outputHeader = false;
       }
+      
       for (int i=1; i<=numCol; ++i)
         System.out.print (rs.getString (i) + "\t");
       System.out.println ();
+      */
       ++rowCount;
     }//end while
     stmt.close ();
@@ -245,6 +247,75 @@ public class ProfNetwork
     if (rs.next())
       return rs.getInt(1);
     return -1;
+  }
+  
+  
+  public List<List<String>> getCSV(String csvFile) {
+ 
+    //String csvFile = "USR-Table 1.csv";
+    BufferedReader br = null;
+    String line = "";
+    String cvsSplitBy = ",";
+    boolean containsBad = false;   
+
+    List<List<String>> result  = new ArrayList<List<String>>();
+
+    try 
+    {
+      br = new BufferedReader(new FileReader(csvFile));
+      while ((line = br.readLine()) != null) 
+      {
+   
+        // use comma as separator
+        String[] next = line.split(cvsSplitBy);
+       
+        containsBad = false; 
+        for (String s : next)
+        {
+          if (s.contains("'"))
+          {
+            containsBad = true;
+            break;
+          }
+        }
+        if (containsBad)
+        {
+          continue;
+        }
+
+        //if(usr[0].contains("'") || usr[1].contains("'") || usr[2].contains("'") || usr[3].contains("'") || usr[4].contains("'"))
+        //  continue;
+   
+        //System.out.println(usr[0] + " " + usr[1]);
+   
+        List<String> record = new ArrayList<String>();
+        for(int i=0; i < next.length; i++ )
+          record.add(next[i]);
+        result.add(record);
+      }
+   
+    } 
+    catch (Exception e) 
+    {
+      e.printStackTrace();
+    }  
+    finally 
+    {
+      if (br != null) 
+      {
+        try 
+        {
+          br.close();
+        } 
+        catch ( Exception e) 
+        {
+          e.printStackTrace();
+        }
+      }
+	  }
+ 
+	  //System.out.println("Done");
+	  return result;
   }
 
   /**
@@ -448,6 +519,12 @@ public class ProfNetwork
       String dbport = args[1];
       String user = args[2];
       esql = new ProfNetwork (dbname, dbport, user, "");
+      
+      
+      // Import Data from CSV
+      importUsr(esql);
+      importMessage(esql);
+      
 
       LoginPrompt(esql);
 
@@ -507,6 +584,61 @@ public class ProfNetwork
   }//end main
 
   //=============END: MAIN===============================================================================
+  //=====================================================================================================
+  //=============BEGIN: HELPER FUNCTIONS (IMPORT DATABASE)===============================================
+  
+  
+  public static void importUsr(ProfNetwork esql)
+  {
+    List<List<String>> result  = new ArrayList<List<String>>();
+    result = esql.getCSV("../../data/USR-Table 1.csv");
+    
+    for ( List<String> usr : result )
+    {
+      String sql = "INSERT INTO USR VALUES ('" + usr.get(0) + "','" + usr.get(1) + "','" + usr.get(2) + "','" + usr.get(3) + "','" + usr.get(4) + "');";
+      try 
+      {
+        esql.executeUpdate(sql);
+        
+      }//end try
+      catch(Exception e)
+      {
+        System.err.println(e.getMessage());
+      }//end catch
+    }  
+  }
+
+  public static void importMessage(ProfNetwork esql)
+  {
+    String status;
+    List<List<String>> result  = new ArrayList<List<String>>();
+    result = esql.getCSV("../../data/Message-Table 1.csv");
+    
+    for ( List<String> message : result )
+    {
+      status = message.get(6);
+      if (status.equals("Delivered") || status.equals("Sent") || status.equals("Draft"))
+      {
+        status = "UNREAD";
+      }
+      else if (status.equals("Read"))
+      {
+        status = "READ";
+      }
+
+      String sql = "INSERT INTO MESSAGE VALUES ('" + message.get(0) + "','" + message.get(1) + "','" + message.get(2) + "','" + message.get(3) + "','" + message.get(4) + "'," + message.get(5) + ",'" + status + "');";
+      try 
+      {
+        esql.executeUpdate(sql);
+      }//end try
+      catch(Exception e)
+      {
+        System.err.println(e.getMessage());
+      }//end catch
+    }  
+  }
+
+  //=============END: HELPER FUNCTIONS (IMPORT DATABASE)=================================================
   //=====================================================================================================
   //=============BEGIN: LOGIN AND SIGN UP================================================================
 
@@ -620,6 +752,7 @@ public class ProfNetwork
   public static void LoginPrompt(ProfNetwork esql)
   {
     clrScreen();
+    boolean done = false;
 
     System.out.println(
       "\n\n*******************************************************\n" +
@@ -628,18 +761,23 @@ public class ProfNetwork
     System.out.println("0. Sign Up!");
     System.out.println("1. Sign In");
 
-	  switch (getUserInputInt("Select option: ", 1))
+    while (!done)
     {
-	    case 0:
-	      SignUp(esql);
-	      break;
-	    case 1:
-	      Login(esql);
-	      break;
-	    default : 
-        System.out.println("!! Invalid option !!"); 
-        break;
-	  }//end switch 
+      done = true;
+      switch (getUserInputInt("Select option: ", 1))
+      {
+        case 0:
+          SignUp(esql);
+          break;
+        case 1:
+          Login(esql);
+          break;
+        default : 
+          System.out.println("!! Invalid option !!"); 
+          done = false;
+          break;
+      }//end switch 
+    }//end while
   } //end LoginPrompt()
 
   //=============END: LOGIN AND SIGN UP==================================================================
@@ -686,19 +824,35 @@ public class ProfNetwork
   {
     clrScreen();
 
-    String name = getUserInputString("Search For (Name): ");
+    String name, sql;
+    List<List<String>> result;
 
-    try 
+    while (true)
     {
-      String sql = "SELECT userId AS Username, name AS Name FROM USR WHERE name = '" + name + "';";
-      esql.executeQuery(sql);
+      try 
+      {
+        name = getUserInputString("Search For (Name or Enter to Cancel): ");
+        if (name.isEmpty())
+        {
+          break;
+        }
+        sql = "SELECT userId, name FROM USR WHERE name ILIKE '%" + name + "%';";
+        result = esql.executeQueryAndReturnResult(sql);
+        if (result.isEmpty())
+        {
+          System.out.println("No Results.");
+        }
+        for (List<String> sublist : result)
+        {
+          System.out.format("%-30s%-30s", sublist.get(0), sublist.get(1));
+          System.out.println();
+        }
+      }
+      catch(Exception e)
+      {
+        System.err.println(e.getMessage());
+      }
     }
-    catch(Exception e)
-    {
-      System.err.println(e.getMessage());
-    }
-
-    getUserInputString("Enter to Continue.");
   }
 
   //=============END: CHANGE PASSWORD====================================================================
@@ -706,40 +860,146 @@ public class ProfNetwork
   //=============BEGIN: FRIENDS==========================================================================
 
   /*
-  * Send friend requests to people within network
+  * Send friend requests to people
   */
   public static void SendFriendRequests(ProfNetwork esql)
   {
     String connectionid, sql;
+    int friendCount = 0; 
 
-    System.out.println("* * * * Friend Requests * * * *");
-    //get username to send request
-    while (true)
-    {
-      connectionid = getUserInputString("Send Request to (Enter to Cancel): "); 
-      if (connectionid.equals(""))
-      {
-        return;
-      }
-      if (esql.isUser(connectionid))
-      {
-        break; 
-      }
-      System.out.println("!! ERROR: User does not exist !!");
-    }
-    
+    System.out.println("* * * * Send New Friend Requests * * * *");
+
+    //get number of friends 
     try
     {
-      sql = "INSERT INTO CONNECTION_USR VALUES ('" + esql.username + "','" + connectionid + "','REQUEST');";
-      esql.executeUpdate(sql);
-    }//end try
+      sql = "SELECT U.userId, U.name "
+           +"FROM   USR U, CONNECTION_USR C "
+           +"WHERE  U.userId != '" + esql.username + "' AND C.status='ACCEPT' "
+                  + "AND ((U.userId = C.userId AND C.connectionId = '" + esql.username + "') "
+                  +"OR (C.userId = '" + esql.username + "' AND C.connectionId = U.userId))";
+      friendCount = esql.executeQuery(sql);  //number of friends
+    }
     catch(Exception e)
     {
       System.err.println(e.getMessage());
-    }//end catch
+      return;
+    }
 
-    getUserInputString("Successfully Sent Request to " + connectionid + ". Enter to Continue."); 
+    while (true)
+    {
+      //get username to send request to
+      while (true)
+      {
+        connectionid = getUserInputString("Send Request to (Enter to Cancel): "); 
+        if (connectionid.equals(""))
+        {
+          return;
+        }
+        if (!esql.isUser(connectionid))
+        {
+          System.out.println("!! ERROR: User does not exist !!");
+        }
+        else if (esql.isConnected(esql, connectionid))
+        {
+          System.out.println("!! ERROR: Already connected with this user !!");
+        }
+        else
+        {
+          break;
+        }
+      }
+      
+      //if necessary, check the level of connections
+      if (friendCount >= 5)
+      {
+        HashSet set = new HashSet();
+        if (!CheckLimitedRange(esql, esql.username, connectionid, 3, set))
+        {
+          System.out.println("!! ERROR: User is not within third level of connections !!");
+          continue;
+        }
+      }
+
+      //send connection request to user
+      try
+      {
+        sql = "INSERT INTO CONNECTION_USR VALUES ('" + esql.username + "','" + connectionid + "','REQUEST');";
+        esql.executeUpdate(sql);
+      }//end try
+      catch(Exception e)
+      {
+        System.err.println(e.getMessage());
+      }//end catch
+
+      System.out.println("Successfully Sent Request to " + connectionid + "."); 
+    }//end while
   }//end SendFriendRequests()
+
+  /*
+  * Return if current user is already connected username
+  */
+  public static boolean isConnected(ProfNetwork esql, String username)
+  {
+    String sql;
+    int rowCount = 0;
+
+    try
+    {
+      sql = "SELECT  * "
+           +"FROM    CONNECTION_USR C "
+           +"WHERE   (C.userId='" + esql.username + "' AND C.connectionId='" + username + "') "
+                +"OR (C.userId='" + username + "' AND C.connectionId='" + esql.username + "')";
+      rowCount = esql.executeQuery(sql);
+    }
+    catch(Exception e)
+    {
+      System.out.println(e.getMessage());
+    }
+    return rowCount > 0;
+  }
+
+  /*
+  * Send friend requests to people within 3 levels
+  */
+  public static boolean CheckLimitedRange(ProfNetwork esql, String username, String connectionid, int maxLevel, HashSet set)
+  {
+    String sql;
+    List<List<String>> range; 
+
+    //System.out.println("CHECKING LEVEL");
+
+    if (maxLevel < 0 || set.contains(username))
+    {
+      return false;
+    }
+    set.add(username); 
+
+    try
+    {
+      sql = "SELECT U.userId, U.name "
+           +"FROM   USR U, CONNECTION_USR C "
+           +"WHERE  U.userId != '" + username + "' AND C.status='ACCEPT' "
+                  + "AND ((U.userId = C.userId AND C.connectionId = '" + username + "') "
+                  +"OR (C.userId = '" + username + "' AND C.connectionId = U.userId))";
+      range = esql.executeQueryAndReturnResult(sql);
+      for (List<String> sublist : range)
+      {
+        username = sublist.get(0).trim();
+        if (username.equals(connectionid) || CheckLimitedRange(esql, username, connectionid, maxLevel-1, set))
+        {
+          //System.out.println("EQUALS " + username + " = " + connectionid);
+          return true;
+        }
+        //System.out.println(maxLevel + " : " + username);
+      }
+    }
+    catch(Exception e)
+    {
+      System.out.println(e.getMessage());
+    }
+
+    return false; 
+  }
 
   /*
   * View and respond to friend requests
@@ -749,6 +1009,8 @@ public class ProfNetwork
     String sql, status; 
     List<List<String>> connectionRequests;
     int respondTo;
+
+    System.out.println("* * * * Viewing New Friend Requests * * * *");
 
     try
     {
@@ -790,11 +1052,9 @@ public class ProfNetwork
       switch(getUserInputInt("Select Option: ", 1))
       {
         case 0:   //accept
-          System.out.println("Accept");
           status = "ACCEPT";
           break;
         case 1:   //decline
-          System.out.println("Decline");
           status = "DECLINE";
           break; 
         default:
