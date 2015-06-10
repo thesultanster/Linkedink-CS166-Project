@@ -521,10 +521,13 @@ public class ProfNetwork
       esql = new ProfNetwork (dbname, dbport, user, "");
       
       
-      // Import Data from CSV
-      importUsr(esql);
-      importMessage(esql);
-      
+      if (getUserInputString("Import Data from Excel (yes or no)? ").equals("yes"))
+      {
+        // Import Data from CSV
+        importUsr(esql);
+        //importMessage(esql);
+        importConnection(esql);
+      }
 
       LoginPrompt(esql);
 
@@ -538,9 +541,9 @@ public class ProfNetwork
         System.out.println("0. Change My Password");
         System.out.println("1. Edit Profile (TODO)");
         System.out.println("2. Search People");
-        System.out.println("3. Send Friend Requests (IN PROGRESS)");
+        System.out.println("3. Send Friend Requests");
         System.out.println("4. View Friend Requests");
-        System.out.println("5. View Friends List (IN PROGRESS)");
+        System.out.println("5. View Friends List");
         System.out.println("6. Send Messages to Anyone");
         System.out.println("7. Read Messages" );
         System.out.println("9. < EXIT");
@@ -587,11 +590,15 @@ public class ProfNetwork
   //=====================================================================================================
   //=============BEGIN: HELPER FUNCTIONS (IMPORT DATABASE)===============================================
   
-  
+  /*
+  * Import usr table from csv file 
+  */
   public static void importUsr(ProfNetwork esql)
   {
     List<List<String>> result  = new ArrayList<List<String>>();
     result = esql.getCSV("../../data/USR-Table 1.csv");
+
+    System.out.println("Loading users...");
     
     for ( List<String> usr : result )
     {
@@ -608,11 +615,16 @@ public class ProfNetwork
     }  
   }
 
+  /*
+  * Import message table from csv file (BUGGY)
+  */
   public static void importMessage(ProfNetwork esql)
   {
     String status;
     List<List<String>> result  = new ArrayList<List<String>>();
     result = esql.getCSV("../../data/Message-Table 1.csv");
+    
+    System.out.println("Loading messages...");
     
     for ( List<String> message : result )
     {
@@ -627,6 +639,32 @@ public class ProfNetwork
       }
 
       String sql = "INSERT INTO MESSAGE VALUES ('" + message.get(0) + "','" + message.get(1) + "','" + message.get(2) + "','" + message.get(3) + "','" + message.get(4) + "'," + message.get(5) + ",'" + status + "');";
+      try 
+      {
+        esql.executeUpdate(sql);
+      }//end try
+      catch(Exception e)
+      {
+        System.err.println(e.getMessage());
+      }//end catch
+    }  
+  }
+
+  /*
+  * Import connection table from csv file
+  */
+  public static void importConnection(ProfNetwork esql)
+  {
+    String status;
+    List<List<String>> result  = new ArrayList<List<String>>();
+    result = esql.getCSV("../../data/Connection-Table 1.csv");
+    
+    System.out.println("Loading connections...");
+    
+    for ( List<String> connection : result )
+    {
+      status = connection.get(2).toUpperCase();
+      String sql = "INSERT INTO CONNECTION_USR VALUES ('" + connection.get(0) + "','" + connection.get(1) + "','" + status + "');";
       try 
       {
         esql.executeUpdate(sql);
@@ -815,6 +853,35 @@ public class ProfNetwork
   public static void EditProfile(ProfNetwork esql)
   {
     getUserInputString("TODO: Edit Profile");
+  }
+
+  public static void ViewProfile(ProfNetwork esql, String username)
+  {
+    String sql; 
+    List<List<String>> result; 
+    List<String> user;
+
+    try
+    {
+      sql = "SELECT * "
+           +"FROM   USR U "
+           +"WHERE  U.userId='"+username+"'";
+      result = esql.executeQueryAndReturnResult(sql);
+      if (result.isEmpty())
+      {
+        System.out.println("!! ERROR: User Not Found !!");
+        return;
+      }
+      user = result.get(0);
+      System.out.format("%-20s%-30s\n", "UserId", user.get(0));
+      System.out.format("%-20s%-30s\n", "Email", user.get(2));
+      System.out.format("%-20s%-30s\n", "Name", user.get(3));
+      System.out.format("%-20s%-30s\n", "Date of Birth", user.get(4));
+    }
+    catch(Exception e)
+    {
+      System.err.println(e.getMessage());
+    }
   }
 
   /*
@@ -1106,20 +1173,25 @@ public class ProfNetwork
       return; 
     }
     
-    //list usernames of requests 
-    for (int i = 0; i < friendsList.size(); ++i)
+    while (true)
     {
-      System.out.format("%-3d%-13s%s", i, friendsList.get(i).get(0), friendsList.get(i).get(1));
-      System.out.println();
+      //list usernames and names of friends 
+      System.out.println("* * * * FRIENDS * * * *");
+      for (int i = 0; i < friendsList.size(); ++i)
+      {
+        System.out.format("%-3d%-13s%s", i, friendsList.get(i).get(0), friendsList.get(i).get(1));
+        System.out.println();
+      }
+      viewProfileOf = getUserInputInt("View Profile of (Enter to Continue): ", friendsList.size()-1); 
+      if (viewProfileOf < 0)
+      {
+        return;
+      }
+      //System.out.println("Profile of... " + friendsList.get(viewProfileOf).get(0) + ": " + friendsList.get(viewProfileOf).get(1));
+      ViewProfile( esql, friendsList.get(viewProfileOf).get(0) );
+      getUserInputString("Enter to Continue.");
+      clrScreen();
     }
-
-    viewProfileOf = getUserInputInt("View Profile of (Enter to Continue): ", friendsList.size()-1); 
-    if (viewProfileOf < 0)
-    {
-      return;
-    }
-    System.out.println("Profile of... " + friendsList.get(viewProfileOf).get(0) + ": " + friendsList.get(viewProfileOf).get(1));
-    getUserInputString("Enter to Continue.");
 
   }//end ViewFriendsList
   
