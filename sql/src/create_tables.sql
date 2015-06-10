@@ -18,8 +18,8 @@ CREATE TABLE WORK_EXPR(
 	company text NOT NULL, 
 	role text NOT NULL,
 	location text,
-	startDate date,
-	endDate date,
+	startDate text,
+	endDate text,
 	PRIMARY KEY(userId,company,role,startDate));
 
 CREATE TABLE EDUCATIONAL_DETAILS(
@@ -27,8 +27,8 @@ CREATE TABLE EDUCATIONAL_DETAILS(
 	instituitionName text NOT NULL, 
 	major text NOT NULL,
 	degree text NOT NULL,
-	startdate date,
-	enddate date,
+	startdate text,
+	enddate text,
 	PRIMARY KEY(userId,major,degree));
 
 CREATE TABLE MESSAGE(

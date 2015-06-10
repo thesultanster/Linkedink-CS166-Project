@@ -527,6 +527,8 @@ public class ProfNetwork
         importUsr(esql);
         //importMessage(esql);
         importConnection(esql);
+        importWorkExperience(esql);
+        importEducationDetails(esql);
       }
 
       LoginPrompt(esql);
@@ -665,6 +667,56 @@ public class ProfNetwork
     {
       status = connection.get(2).toUpperCase();
       String sql = "INSERT INTO CONNECTION_USR VALUES ('" + connection.get(0) + "','" + connection.get(1) + "','" + status + "');";
+      try 
+      {
+        esql.executeUpdate(sql);
+      }//end try
+      catch(Exception e)
+      {
+        System.err.println(e.getMessage());
+      }//end catch
+    }  
+  }
+
+  /*
+  * Import work experience table from csv file
+  */
+  public static void importWorkExperience(ProfNetwork esql)
+  {
+    String status;
+    List<List<String>> result  = new ArrayList<List<String>>();
+    result = esql.getCSV("../../data/Work_Ex-Table 1.csv");
+    
+    System.out.println("Loading work experience...");
+    
+    for ( List<String> work : result )
+    {
+      String sql = "INSERT INTO WORK_EXPR VALUES ('" + work.get(0) + "','" + work.get(1) + "','" + work.get(2) + "','" + work.get(3) + "','" + work.get(4) + "','" + work.get(5) + "');";
+      try 
+      {
+        esql.executeUpdate(sql);
+      }//end try
+      catch(Exception e)
+      {
+        System.err.println(e.getMessage());
+      }//end catch
+    }  
+  }
+
+  /*
+  * Import education details table from csv file
+  */
+  public static void importEducationDetails(ProfNetwork esql)
+  {
+    String status;
+    List<List<String>> result  = new ArrayList<List<String>>();
+    result = esql.getCSV("../../data/Edu_Det-Table 1.csv");
+    
+    System.out.println("Loading education details...");
+    
+    for ( List<String> edu : result )
+    {
+      String sql = "INSERT INTO EDUCATIONAL_DETAILS VALUES ('" + edu.get(0) + "','" + edu.get(1) + "','" + edu.get(2) + "','" + edu.get(3) + "','" + edu.get(4) + "','" + edu.get(5) + "');";
       try 
       {
         esql.executeUpdate(sql);
@@ -858,25 +910,52 @@ public class ProfNetwork
   public static void ViewProfile(ProfNetwork esql, String username)
   {
     String sql; 
-    List<List<String>> result; 
-    List<String> user;
+    List<List<String>> overview, workExp, eduDet; 
 
     try
     {
       sql = "SELECT * "
            +"FROM   USR U "
            +"WHERE  U.userId='"+username+"'";
-      result = esql.executeQueryAndReturnResult(sql);
-      if (result.isEmpty())
+      overview = esql.executeQueryAndReturnResult(sql);
+      sql = "SELECT * "
+           +"FROM WORK_EXPR W "
+           +"WHERE W.userId='"+username+"'";
+      workExp = esql.executeQueryAndReturnResult(sql);
+      sql = "SELECT * "
+           +"FROM EDUCATIONAL_DETAILS E "
+           +"WHERE E.userId='"+username+"'";
+      eduDet = esql.executeQueryAndReturnResult(sql);
+      
+      if (overview.isEmpty())
       {
         System.out.println("!! ERROR: User Not Found !!");
         return;
       }
-      user = result.get(0);
-      System.out.format("%-20s%-30s\n", "UserId", user.get(0));
-      System.out.format("%-20s%-30s\n", "Email", user.get(2));
-      System.out.format("%-20s%-30s\n", "Name", user.get(3));
-      System.out.format("%-20s%-30s\n", "Date of Birth", user.get(4));
+      System.out.println("* OVERVIEW *");
+      for (List<String> user : overview)
+      {
+        System.out.format("\t%-30s\n", user.get(0));
+        System.out.format("\t%-30s\n", user.get(2));
+        System.out.format("\t%-30s\n", user.get(3));
+        System.out.format("\t%-30s\n", user.get(4));
+      }
+      System.out.println("* WORK EXPERIENCE *");
+      for (List<String> work : workExp)
+      {
+        System.out.format("%s - %s\n", work.get(4), work.get(5));
+        System.out.format("\t%-30s\n", work.get(1));
+        System.out.format("\t%-30s\n", work.get(2));
+        System.out.format("\t%-30s\n", work.get(3));
+      }
+      System.out.println("* EDUCATIONAL DETAILS *");
+      for (List<String> edu : eduDet)
+      {
+        System.out.format("%s - %s\n", edu.get(4), edu.get(5));
+        System.out.format("\t%-30s\n", edu.get(1));
+        System.out.format("\t%-30s\n", edu.get(2));
+        System.out.format("\t%-30s\n", edu.get(3));
+      }
     }
     catch(Exception e)
     {
